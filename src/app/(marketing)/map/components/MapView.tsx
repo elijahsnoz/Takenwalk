@@ -11,6 +11,7 @@ import type { GeoJsonPolygon } from "@/lib/geo/pointInPolygon";
 
 const PIWOYI_FALLBACK_CENTER = { lat: 9.0579, lng: 7.4384 };
 const BUSINESSES_SOURCE_ID = "businesses";
+const LOAD_TIMEOUT_MS = 12_000;
 
 function toFeatureCollection(businesses: PublicBusiness[]) {
   return {
@@ -38,7 +39,8 @@ export default function MapView({
   const mapRef = useRef<MapLibreMap | null>(null);
   const businessesRef = useRef(businesses);
   const onSelectRef = useRef(onSelectBusiness);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "ready" | "error" | "timeout">("loading");
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     businessesRef.current = businesses;
@@ -47,6 +49,7 @@ export default function MapView({
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
+    setStatus("loading");
 
     const center = serviceArea
       ? { lat: serviceArea.centerLatitude, lng: serviceArea.centerLongitude }
@@ -144,13 +147,18 @@ export default function MapView({
       setStatus("ready");
     });
 
+    const timeoutId = window.setTimeout(() => {
+      setStatus((current) => (current === "loading" ? "timeout" : current));
+    }, LOAD_TIMEOUT_MS);
+
     return () => {
+      window.clearTimeout(timeoutId);
       map.remove();
       mapRef.current = null;
     };
-    // Map instance is created once; businesses/serviceArea updates are handled below.
+    // Map instance is created once per retry; businesses/serviceArea updates are handled below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [retryCount]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -162,8 +170,28 @@ export default function MapView({
   return (
     <div className="relative h-full min-h-[420px] w-full overflow-hidden rounded-xl">
       {status !== "ready" ? (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-cream-soft text-sm text-ink-soft">
-          {status === "error" ? "Map failed to load — check your connection and refresh." : "Loading map…"}
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-cream-soft p-4 text-center text-sm text-ink-soft">
+          {status === "loading" ? <p>Loading map…</p> : null}
+          {status === "error" || status === "timeout" ? (
+            <>
+              <p>
+                {status === "timeout"
+                  ? "Map is taking too long to load — likely a slow connection."
+                  : "Map failed to load."}
+              </p>
+              <p className="text-xs">Switch to List View to keep browsing without the map.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setStatus("loading");
+                  setRetryCount((n) => n + 1);
+                }}
+                className="mt-1 rounded-full border border-ink/20 bg-paper px-4 py-1.5 text-xs font-semibold text-ink hover:bg-ink/5"
+              >
+                Retry loading map
+              </button>
+            </>
+          ) : null}
         </div>
       ) : null}
       <div ref={containerRef} className="h-full w-full" />

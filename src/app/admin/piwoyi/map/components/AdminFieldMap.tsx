@@ -7,6 +7,8 @@ import { MAP_STYLE_URL } from "@/components/map/mapStyle";
 import { getMarkerIconUrl } from "@/components/map/markerIcons";
 import type { BusinessCategoryType } from "@/generated/prisma/enums";
 
+const LOAD_TIMEOUT_MS = 12_000;
+
 type ExistingBusiness = {
   id: string;
   name: string;
@@ -47,7 +49,8 @@ export function AdminFieldMap({
   const pendingMarkerRef = useRef<Marker | null>(null);
   const onMapClickRef = useRef(onMapClick);
   const onDragRef = useRef(onPendingMarkerDrag);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "ready" | "error" | "timeout">("loading");
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     onMapClickRef.current = onMapClick;
@@ -56,6 +59,8 @@ export function AdminFieldMap({
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
+    setStatus("loading");
+
     const map = new MapLibreMap({
       container: containerRef.current,
       style: MAP_STYLE_URL,
@@ -65,13 +70,19 @@ export function AdminFieldMap({
     mapRef.current = map;
     map.on("error", () => setStatus("error"));
     map.on("load", () => setStatus("ready"));
+
+    const timeoutId = window.setTimeout(() => {
+      setStatus((current) => (current === "loading" ? "timeout" : current));
+    }, LOAD_TIMEOUT_MS);
+
     return () => {
+      window.clearTimeout(timeoutId);
       map.remove();
       mapRef.current = null;
     };
-    // Map is created once; recentering happens via the pendingPosition effect.
+    // Map is created once per retry; recentering happens via the pendingPosition effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [retryCount]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -128,8 +139,30 @@ export function AdminFieldMap({
   return (
     <div className="relative h-full min-h-[320px] w-full overflow-hidden rounded-xl">
       {status !== "ready" ? (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-cream-soft text-sm text-ink-soft">
-          {status === "error" ? "Map failed to load — check your connection and refresh." : "Loading map…"}
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-cream-soft p-4 text-center text-sm text-ink-soft">
+          {status === "loading" ? <p>Loading map…</p> : null}
+          {status === "error" || status === "timeout" ? (
+            <>
+              <p>
+                {status === "timeout"
+                  ? "Map is taking too long to load — likely a slow connection."
+                  : "Map failed to load."}
+              </p>
+              <p className="text-xs">
+                You can still capture GPS and save the business below without the map.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setStatus("loading");
+                  setRetryCount((n) => n + 1);
+                }}
+                className="mt-1 rounded-full border border-ink/20 bg-paper px-4 py-1.5 text-xs font-semibold text-ink hover:bg-ink/5"
+              >
+                Retry loading map
+              </button>
+            </>
+          ) : null}
         </div>
       ) : null}
       <div ref={containerRef} className="h-full w-full" />

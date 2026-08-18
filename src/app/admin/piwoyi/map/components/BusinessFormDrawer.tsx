@@ -9,6 +9,7 @@ import { AdminFieldMap } from "./AdminFieldMap";
 import { GpsCaptureControl } from "./GpsCaptureControl";
 import { ManualPinControl } from "./ManualPinControl";
 import { AddressLookupControl } from "./AddressLookupControl";
+import { ManualCoordinatesControl } from "./ManualCoordinatesControl";
 import { AccuracyBadge } from "./AccuracyBadge";
 import { savePendingBusiness, createPendingBusinessRecord, type PendingBusinessPayload } from "@/lib/offline/db";
 import { syncPendingBusiness } from "@/lib/offline/queue";
@@ -161,6 +162,10 @@ export function BusinessFormDrawer({
 
           <div className="mt-2">
             <AddressLookupControl onFound={(pos) => confirmLocation(pos.lat, pos.lng, 0, "MANUAL")} />
+          </div>
+
+          <div className="mt-2">
+            <ManualCoordinatesControl onSubmit={(pos) => confirmLocation(pos.lat, pos.lng, 0, "MANUAL")} />
           </div>
 
           {location.status === "gps_error" ? (
