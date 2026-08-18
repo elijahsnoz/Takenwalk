@@ -15,7 +15,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       <AdminSidebar />
       <div className="flex flex-1 flex-col">
         <AdminTopbar adminName={session.user.name ?? session.user.email ?? "Admin"} />
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-4 sm:p-6">{children}</main>
       </div>
     </div>
   );

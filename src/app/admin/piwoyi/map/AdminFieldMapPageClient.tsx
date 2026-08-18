@@ -31,13 +31,15 @@ export function AdminFieldMapPageClient({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-extrabold text-ink">Piwoyi Field Mapping</h1>
+          <h1 className="font-display text-2xl font-extrabold text-ink sm:text-3xl">Piwoyi Field Mapping</h1>
           <p className="text-sm text-ink-soft">{businesses.length} businesses mapped so far.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <SyncStatusIndicator />
+        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <div className="self-center">
+            <SyncStatusIndicator />
+          </div>
           <AddBusinessButton onClick={() => setDrawerOpen(true)} />
         </div>
       </div>

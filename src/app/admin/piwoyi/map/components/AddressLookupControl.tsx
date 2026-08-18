@@ -30,12 +30,12 @@ export function AddressLookupControl({
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Input
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           placeholder="Type an address to look up…"
-          className="flex-1"
+          className="min-w-[160px] flex-1"
         />
         <Button type="button" variant="outline" onClick={lookup} disabled={loading || address.trim().length < 3}>
           {loading ? "Looking up…" : "🔍 Look Up"}
