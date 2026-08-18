@@ -41,6 +41,7 @@ export default function MapView({
   const onSelectRef = useRef(onSelectBusiness);
   const [status, setStatus] = useState<"loading" | "ready" | "error" | "timeout">("loading");
   const [retryCount, setRetryCount] = useState(0);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
   useEffect(() => {
     businessesRef.current = businesses;
@@ -50,18 +51,45 @@ export default function MapView({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     setStatus("loading");
+    setErrorDetail(null);
+
+    const canProbe = document.createElement("canvas");
+    const hasWebGL = Boolean(canProbe.getContext("webgl2") || canProbe.getContext("webgl"));
+    if (!hasWebGL) {
+      // One-time synchronous capability probe (must be client-only, can't run
+      // during render without crashing SSR) gating whether we even attempt
+      // map creation below — no async boundary available to hide this behind.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setErrorDetail("This browser/device cannot create a WebGL context (required for the map).");
+      setStatus("error");
+      return;
+    }
 
     const center = serviceArea
       ? { lat: serviceArea.centerLatitude, lng: serviceArea.centerLongitude }
       : PIWOYI_FALLBACK_CENTER;
 
-    const map = new MapLibreMap({
-      container: containerRef.current,
-      style: MAP_STYLE_URL,
-      center: [center.lng, center.lat],
-      zoom: serviceArea?.defaultZoom ?? 15,
-    });
+    let map: MapLibreMap;
+    try {
+      map = new MapLibreMap({
+        container: containerRef.current,
+        style: MAP_STYLE_URL,
+        center: [center.lng, center.lat],
+        zoom: serviceArea?.defaultZoom ?? 15,
+      });
+    } catch (err) {
+      setErrorDetail(err instanceof Error ? err.message : String(err));
+      setStatus("error");
+      return;
+    }
     mapRef.current = map;
+
+    const progress: string[] = [];
+    for (const event of ["styledata", "sourcedata", "dataloading", "idle"] as const) {
+      map.on(event, () => {
+        if (progress[progress.length - 1] !== event) progress.push(event);
+      });
+    }
 
     map.addControl(new NavigationControl({ showCompass: false }), "top-right");
     map.addControl(
@@ -69,7 +97,11 @@ export default function MapView({
       "top-right"
     );
 
-    map.on("error", () => setStatus("error"));
+    map.on("error", (e) => {
+      const message = e && "error" in e ? (e.error as Error | undefined)?.message : undefined;
+      setErrorDetail(message ?? "Unknown map error");
+      setStatus("error");
+    });
 
     map.on("load", () => {
       if (serviceArea) {
@@ -148,7 +180,13 @@ export default function MapView({
     });
 
     const timeoutId = window.setTimeout(() => {
-      setStatus((current) => (current === "loading" ? "timeout" : current));
+      setStatus((current) => {
+        if (current !== "loading") return current;
+        setErrorDetail(
+          progress.length > 0 ? `Reached: ${progress.join(" → ")}, then stalled` : "No load events received at all"
+        );
+        return "timeout";
+      });
     }, LOAD_TIMEOUT_MS);
 
     return () => {
@@ -179,6 +217,11 @@ export default function MapView({
                   ? "Map is taking too long to load — likely a slow connection."
                   : "Map failed to load."}
               </p>
+              {errorDetail ? (
+                <p className="max-w-xs break-words rounded bg-ink/5 px-2 py-1 font-mono text-[11px] text-ink">
+                  {errorDetail}
+                </p>
+              ) : null}
               <p className="text-xs">Switch to List View to keep browsing without the map.</p>
               <button
                 type="button"

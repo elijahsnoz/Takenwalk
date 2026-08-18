@@ -51,6 +51,7 @@ export function AdminFieldMap({
   const onDragRef = useRef(onPendingMarkerDrag);
   const [status, setStatus] = useState<"loading" | "ready" | "error" | "timeout">("loading");
   const [retryCount, setRetryCount] = useState(0);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
   useEffect(() => {
     onMapClickRef.current = onMapClick;
@@ -60,19 +61,57 @@ export function AdminFieldMap({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     setStatus("loading");
+    setErrorDetail(null);
 
-    const map = new MapLibreMap({
-      container: containerRef.current,
-      style: MAP_STYLE_URL,
-      center: [center.lng, center.lat],
-      zoom,
-    });
+    const canProbe = document.createElement("canvas");
+    const hasWebGL = Boolean(canProbe.getContext("webgl2") || canProbe.getContext("webgl"));
+    if (!hasWebGL) {
+      // One-time synchronous capability probe (must be client-only, can't run
+      // during render without crashing SSR) gating whether we even attempt
+      // map creation below — no async boundary available to hide this behind.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setErrorDetail("This browser/device cannot create a WebGL context (required for the map).");
+      setStatus("error");
+      return;
+    }
+
+    let map: MapLibreMap;
+    try {
+      map = new MapLibreMap({
+        container: containerRef.current,
+        style: MAP_STYLE_URL,
+        center: [center.lng, center.lat],
+        zoom,
+      });
+    } catch (err) {
+      setErrorDetail(err instanceof Error ? err.message : String(err));
+      setStatus("error");
+      return;
+    }
     mapRef.current = map;
-    map.on("error", () => setStatus("error"));
+
+    const progress: string[] = [];
+    for (const event of ["styledata", "sourcedata", "dataloading", "idle"] as const) {
+      map.on(event, () => {
+        if (progress[progress.length - 1] !== event) progress.push(event);
+      });
+    }
+
+    map.on("error", (e) => {
+      const message = e && "error" in e ? (e.error as Error | undefined)?.message : undefined;
+      setErrorDetail(message ?? "Unknown map error");
+      setStatus("error");
+    });
     map.on("load", () => setStatus("ready"));
 
     const timeoutId = window.setTimeout(() => {
-      setStatus((current) => (current === "loading" ? "timeout" : current));
+      setStatus((current) => {
+        if (current !== "loading") return current;
+        setErrorDetail(
+          progress.length > 0 ? `Reached: ${progress.join(" → ")}, then stalled` : "No load events received at all"
+        );
+        return "timeout";
+      });
     }, LOAD_TIMEOUT_MS);
 
     return () => {
@@ -148,6 +187,11 @@ export function AdminFieldMap({
                   ? "Map is taking too long to load — likely a slow connection."
                   : "Map failed to load."}
               </p>
+              {errorDetail ? (
+                <p className="max-w-xs break-words rounded bg-ink/5 px-2 py-1 font-mono text-[11px] text-ink">
+                  {errorDetail}
+                </p>
+              ) : null}
               <p className="text-xs">
                 You can still capture GPS and save the business below without the map.
               </p>
