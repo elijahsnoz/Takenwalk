@@ -1,0 +1,591 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── ENUMS ──────────────────────────────────────────────────────────
+enum AdminRole {
+  FOUNDER
+  COORDINATOR
+}
+
+enum BusinessCategoryType {
+  GENERAL_SHOP
+  FOODSTUFF
+  POS
+  FOOD_VENDOR
+  PHARMACY_HEALTH
+  FASHION
+  PHONE_TECH
+  REPAIR_SERVICE
+  HOUSEHOLD
+  OTHER
+}
+
+enum LocationSource {
+  GPS
+  MANUAL
+  VERIFIED
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum VerificationMethod {
+  IN_PERSON_VISIT
+  PHONE_CALL
+  DOCUMENT
+  OTHER
+}
+
+enum PaymentMethod {
+  CASH
+  POS_CARD
+  BANK_TRANSFER
+  MOBILE_MONEY
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum WalkerStatus {
+  AVAILABLE
+  OFFLINE
+  BUSY
+}
+
+enum CommunicationChannel {
+  APP
+  WEB
+  WHATSAPP
+  SMS
+  PHONE
+  COORDINATOR
+}
+
+enum JobStatus {
+  NEW
+  ASSIGNED
+  ACCEPTED
+  GOING_TO_SHOP
+  SHOPPING
+  PURCHASE_CONFIRMED
+  PICKED_UP
+  DELIVERING
+  COMPLETED
+  CANCELLED
+}
+
+enum JobLocationType {
+  PICKUP
+  DROPOFF
+  WALKER_PING
+}
+
+enum JobPhotoStage {
+  REQUEST_REFERENCE
+  PURCHASE_PROOF
+  DELIVERY_PROOF
+  OTHER
+}
+
+enum ActorType {
+  ADMIN
+  WALKER
+  CUSTOMER
+  SYSTEM
+}
+
+enum CommunityPostType {
+  JOB
+  BUSINESS_HIGHLIGHT
+  REQUEST
+  OPPORTUNITY
+  ANNOUNCEMENT
+  SUPPORT_LOCAL
+}
+
+enum LocationEventSubject {
+  BUSINESS
+  WALKER
+  JOB
+  ADMIN_CAPTURE
+}
+
+// ── AUTH (infra) ──────────────────────────────────────────────────
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         AdminRole @default(FOUNDER)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  businessLocationsCaptured BusinessLocation[]
+  businessVisits            BusinessVisit[]
+  verifications             Verification[]
+  locationEvents            LocationEvent[]
+  jobStatusEvents           JobStatusEvent[]
+  paymentsRecorded          Payment[]
+
+  @@map("admin_users")
+}
+
+// ── GEOGRAPHY: City -> Neighborhood -> ServiceArea ──────────────────
+model City {
+  id        String   @id @default(cuid())
+  name      String
+  state     String?
+  country   String   @default("Nigeria")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  neighborhoods Neighborhood[]
+
+  @@unique([name, country])
+  @@map("cities")
+}
+
+model Neighborhood {
+  id          String   @id @default(cuid())
+  cityId      String
+  name        String
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  city         City          @relation(fields: [cityId], references: [id])
+  serviceAreas ServiceArea[]
+  businesses   Business[]
+  walkers      Walker[]
+  jobs         Job[]
+  customers    Customer[]
+
+  @@unique([cityId, name])
+  @@index([cityId])
+  @@map("neighborhoods")
+}
+
+model ServiceArea {
+  id              String   @id @default(cuid())
+  neighborhoodId  String?
+  name            String
+  boundary        Json
+  centerLatitude  Float
+  centerLongitude Float
+  defaultZoom     Int      @default(15)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  neighborhood Neighborhood? @relation(fields: [neighborhoodId], references: [id])
+
+  @@index([neighborhoodId])
+  @@map("service_areas")
+}
+
+// ── BUSINESS ───────────────────────────────────────────────────────
+model BusinessCategory {
+  id        String               @id @default(cuid())
+  key       BusinessCategoryType @unique
+  label     String
+  emoji     String
+  colorHex  String
+  iconPath  String?
+  sortOrder Int                  @default(0)
+  createdAt DateTime             @default(now())
+
+  businesses Business[]
+
+  @@map("business_categories")
+}
+
+model Business {
+  id             String  @id @default(cuid())
+  clientRecordId String? @unique
+  slug           String  @unique
+  name           String
+  categoryId     String
+  neighborhoodId String
+
+  ownerName            String?
+  phone                String?
+  whatsapp             String?
+  address              String?
+  description          String?
+  productsServices     String?
+  topRequestedProducts String[] @default([])
+
+  openingHours              Json?
+  paymentMethods            PaymentMethod[] @default([])
+  pickupAvailable           Boolean         @default(false)
+  whatsappOrderingAvailable Boolean         @default(false)
+
+  showPhonePublicly    Boolean @default(false)
+  showWhatsappPublicly Boolean @default(false)
+  isPubliclyListed     Boolean @default(false)
+
+  photoUrl String?
+  notes    String?
+
+  latitude               Float?
+  longitude              Float?
+  locationAccuracyMeters Float?
+  locationSource         LocationSource?
+
+  verificationStatus VerificationStatus @default(PENDING)
+  lastVisitedAt      DateTime?
+  isDemoData         Boolean            @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  category       BusinessCategory   @relation(fields: [categoryId], references: [id])
+  neighborhood   Neighborhood       @relation(fields: [neighborhoodId], references: [id])
+  products       BusinessProduct[]
+  locations      BusinessLocation[]
+  visits         BusinessVisit[]
+  verifications  Verification[]
+  jobs           Job[]
+  communityPosts CommunityPost[]
+  locationEvents LocationEvent[]
+
+  @@index([categoryId])
+  @@index([neighborhoodId])
+  @@index([isPubliclyListed])
+  @@map("businesses")
+}
+
+model BusinessProduct {
+  id          String   @id @default(cuid())
+  businessId  String
+  name        String
+  description String?
+  priceNaira  Decimal? @db.Decimal(12, 2)
+  isAvailable Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  jobItems JobItem[]
+
+  @@index([businessId])
+  @@map("business_products")
+}
+
+model BusinessLocation {
+  id                String         @id @default(cuid())
+  businessId        String
+  latitude          Float
+  longitude         Float
+  accuracyMeters    Float?
+  locationSource    LocationSource
+  geocodedAddress   String?
+  isCurrent         Boolean        @default(true)
+  capturedByAdminId String?
+  capturedAt        DateTime       @default(now())
+  createdAt         DateTime       @default(now())
+
+  business        Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  capturedByAdmin AdminUser? @relation(fields: [capturedByAdminId], references: [id])
+
+  @@index([businessId])
+  @@map("business_locations")
+}
+
+model BusinessVisit {
+  id               String   @id @default(cuid())
+  businessId       String
+  visitedAt        DateTime
+  visitedByAdminId String?
+  notes            String?
+  createdAt        DateTime @default(now())
+
+  business       Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  visitedByAdmin AdminUser? @relation(fields: [visitedByAdminId], references: [id])
+
+  @@index([businessId])
+  @@map("business_visits")
+}
+
+// ── PEOPLE ─────────────────────────────────────────────────────────
+model Customer {
+  id             String   @id @default(cuid())
+  name           String
+  phone          String   @unique
+  whatsapp       String?
+  neighborhoodId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  neighborhood Neighborhood? @relation(fields: [neighborhoodId], references: [id])
+  jobs         Job[]
+
+  @@map("customers")
+}
+
+model Walker {
+  id                   String               @id @default(cuid())
+  name                 String
+  phone                String               @unique
+  whatsapp             String?
+  communicationChannel CommunicationChannel @default(PHONE)
+  status               WalkerStatus         @default(OFFLINE)
+  neighborhoodId       String?
+  notes                String?
+  isActive             Boolean              @default(true)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  neighborhood    Neighborhood?    @relation(fields: [neighborhoodId], references: [id])
+  locations       WalkerLocation[]
+  jobs            Job[]
+  locationEvents  LocationEvent[]
+  jobStatusEvents JobStatusEvent[]
+
+  @@map("walkers")
+}
+
+model WalkerLocation {
+  id             String   @id @default(cuid())
+  walkerId       String
+  latitude       Float
+  longitude      Float
+  accuracyMeters Float?
+  recordedAt     DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  walker Walker @relation(fields: [walkerId], references: [id], onDelete: Cascade)
+
+  @@index([walkerId])
+  @@map("walker_locations")
+}
+
+// ── JOBS ───────────────────────────────────────────────────────────
+model Job {
+  id               String  @id @default(cuid())
+  sequenceNumber   Int     @unique @default(autoincrement())
+  customerId       String
+  businessId       String
+  assignedWalkerId String?
+  neighborhoodId   String?
+
+  status                        JobStatus            @default(NEW)
+  description                   String
+  destinationAddressText        String?
+  destinationLatitude           Float?
+  destinationLongitude          Float?
+  instructions                  String?
+  preferredCommunicationChannel CommunicationChannel @default(WHATSAPP)
+
+  isDemoData  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  customer       Customer      @relation(fields: [customerId], references: [id])
+  business       Business      @relation(fields: [businessId], references: [id])
+  assignedWalker Walker?       @relation(fields: [assignedWalkerId], references: [id])
+  neighborhood   Neighborhood? @relation(fields: [neighborhoodId], references: [id])
+
+  items          JobItem[]
+  locations      JobLocation[]
+  messages       JobMessage[]
+  photos         JobPhoto[]
+  payments       Payment[]
+  statusEvents   JobStatusEvent[]
+  locationEvents LocationEvent[]
+
+  @@index([status])
+  @@index([businessId])
+  @@index([assignedWalkerId])
+  @@map("jobs")
+}
+
+model JobItem {
+  id                String   @id @default(cuid())
+  jobId             String
+  businessProductId String?
+  description       String
+  quantity          String?
+  notes             String?
+  createdAt         DateTime @default(now())
+
+  job             Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  businessProduct BusinessProduct? @relation(fields: [businessProductId], references: [id])
+
+  @@index([jobId])
+  @@map("job_items")
+}
+
+model JobLocation {
+  id             String          @id @default(cuid())
+  jobId          String
+  type           JobLocationType
+  latitude       Float
+  longitude      Float
+  accuracyMeters Float?
+  recordedAt     DateTime        @default(now())
+  createdAt      DateTime        @default(now())
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@map("job_locations")
+}
+
+model JobMessage {
+  id         String                @id @default(cuid())
+  jobId      String
+  senderType ActorType
+  senderId   String?
+  body       String
+  channel    CommunicationChannel?
+  createdAt  DateTime              @default(now())
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@map("job_messages")
+}
+
+model JobPhoto {
+  id             String        @id @default(cuid())
+  jobId          String
+  url            String
+  uploadedByType ActorType
+  uploadedById   String?
+  stage          JobPhotoStage @default(OTHER)
+  caption        String?
+  createdAt      DateTime      @default(now())
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@map("job_photos")
+}
+
+model JobStatusEvent {
+  id            String     @id @default(cuid())
+  jobId         String
+  fromStatus    JobStatus?
+  toStatus      JobStatus
+  actorType     ActorType
+  actorAdminId  String?
+  actorWalkerId String?
+  note          String?
+  photoUrl      String?
+  latitude      Float?
+  longitude     Float?
+  createdAt     DateTime   @default(now())
+
+  job         Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  actorAdmin  AdminUser? @relation(fields: [actorAdminId], references: [id])
+  actorWalker Walker?    @relation(fields: [actorWalkerId], references: [id])
+
+  @@index([jobId])
+  @@map("job_status_events")
+}
+
+model Payment {
+  id                 String        @id @default(cuid())
+  jobId              String
+  amountNaira        Decimal       @db.Decimal(12, 2)
+  method             PaymentMethod
+  status             PaymentStatus @default(PENDING)
+  walkerEarningNaira Decimal?      @db.Decimal(12, 2)
+  recordedByAdminId  String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  job             Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  recordedByAdmin AdminUser? @relation(fields: [recordedByAdminId], references: [id])
+
+  @@index([jobId])
+  @@map("payments")
+}
+
+// ── COMMUNITY ──────────────────────────────────────────────────────
+model CommunityPost {
+  id          String            @id @default(cuid())
+  type        CommunityPostType
+  title       String
+  body        String
+  authorType  ActorType
+  authorId    String?
+  businessId  String?
+  latitude    Float?
+  longitude   Float?
+  isPublished Boolean           @default(true)
+  isDemoData  Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  business Business? @relation(fields: [businessId], references: [id])
+
+  @@index([type])
+  @@index([isPublished])
+  @@map("community_posts")
+}
+
+// ── VERIFICATION & AUDIT ─────────────────────────────────────────────
+model Verification {
+  id                String             @id @default(cuid())
+  businessId        String
+  method            VerificationMethod
+  status            VerificationStatus @default(PENDING)
+  verifiedByAdminId String?
+  notes             String?
+  verifiedAt        DateTime?
+  createdAt         DateTime           @default(now())
+
+  business        Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  verifiedByAdmin AdminUser? @relation(fields: [verifiedByAdminId], references: [id])
+
+  @@index([businessId])
+  @@map("verifications")
+}
+
+model LocationEvent {
+  id                String               @id @default(cuid())
+  subjectType       LocationEventSubject
+  businessId        String?
+  walkerId          String?
+  jobId             String?
+  source            LocationSource
+  latitude          Float
+  longitude         Float
+  accuracyMeters    Float?
+  capturedByAdminId String?
+  rawPayload        Json?
+  createdAt         DateTime             @default(now())
+
+  business        Business?  @relation(fields: [businessId], references: [id])
+  walker          Walker?    @relation(fields: [walkerId], references: [id])
+  job             Job?       @relation(fields: [jobId], references: [id])
+  capturedByAdmin AdminUser? @relation(fields: [capturedByAdminId], references: [id])
+
+  @@index([businessId])
+  @@index([walkerId])
+  @@index([jobId])
+  @@map("location_events")
+}
