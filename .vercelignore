@@ -1,0 +1,9 @@
+# Local secrets must never reach a deployment bundle. Vercel CLI does not
+# reliably exclude these via .gitignore alone — confirmed the hard way when
+# a local-only test key leaked into production because it wasn't also set
+# in the Vercel dashboard (Next.js's own env loader fills gaps in
+# process.env from any .env file it finds, and only skips a variable that
+# the platform already injected).
+.env
+.env.local
+.env.*.local
