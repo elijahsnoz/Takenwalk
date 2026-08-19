@@ -53,6 +53,7 @@ enum PaymentMethod {
   POS_CARD
   BANK_TRANSFER
   MOBILE_MONEY
+  PAYSTACK
 }
 
 enum PaymentStatus {
@@ -522,6 +523,10 @@ model Payment {
   status             PaymentStatus @default(PENDING)
   walkerEarningNaira Decimal?      @db.Decimal(12, 2)
   recordedByAdminId  String?
+  // Set only for method: PAYSTACK — the reference we generate at checkout
+  // initialization, used to verify the transaction and as the idempotency
+  // key so a webhook retry or a callback/webhook race never double-creates.
+  paystackReference  String?       @unique
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
 

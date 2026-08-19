@@ -10,6 +10,7 @@ const envSchema = z.object({
   GEOCODING_USER_AGENT: z.string().optional(),
   BLOB_READ_WRITE_TOKEN: z.string().optional(),
   DEMO_MODE: z.string().optional(),
+  PAYSTACK_SECRET_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -25,3 +26,5 @@ export const env = parsed.data;
 export const isDemoModeEnabled = env.DEMO_MODE === "true";
 
 export const hasBlobStorage = Boolean(env.BLOB_READ_WRITE_TOKEN);
+
+export const hasPaystack = Boolean(env.PAYSTACK_SECRET_KEY);
