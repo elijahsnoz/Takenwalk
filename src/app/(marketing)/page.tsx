@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/Button";
 import { HandDrawnFrame } from "@/components/ui/Card";
 import { DecorativeIconStrip } from "@/components/ui/DecorativeIconStrip";
+import { LogoMark } from "@/components/ui/Logo";
 import { NeighborhoodScene } from "@/components/marketing/NeighborhoodScene";
 
 const STEPS = [
@@ -16,8 +17,9 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl px-4 pb-10 pt-14 sm:px-6 sm:pt-20">
           <DecorativeIconStrip className="mb-8" />
 
-          <h1 className="font-display text-5xl font-extrabold leading-[1.05] text-ink sm:text-6xl">
-            TAKENWALK
+          <h1 className="flex items-center gap-4 font-display text-5xl font-extrabold leading-[1.05] text-ink sm:text-6xl">
+            <LogoMark width={52} height={52} className="shrink-0 sm:h-16 sm:w-16" />
+            TAKEN A WALK
           </h1>
           <p className="mt-4 max-w-xl text-xl font-semibold text-ink">
             Need something? We&apos;ll walk for you.

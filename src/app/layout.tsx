@@ -17,11 +17,11 @@ const baloo = Baloo_2({
 
 export const metadata: Metadata = {
   title: {
-    default: "TakenWalk — Need something? We'll walk for you.",
-    template: "%s · TakenWalk",
+    default: "Taken A Walk — Need something? We'll walk for you.",
+    template: "%s · Taken A Walk",
   },
   description:
-    "TakenWalk connects people, Walkers, and local businesses around Piwoyi, Abuja. Buy it. Pick it up. Deliver it. Get it done.",
+    "Taken A Walk connects people, Walkers, and local businesses around Piwoyi, Abuja. Buy it. Pick it up. Deliver it. Get it done.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

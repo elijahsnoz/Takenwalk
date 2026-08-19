@@ -1,4 +1,4 @@
-# TakenWalk
+# Taken A Walk
 
 Need something? We'll walk for you. A hyperlocal community-commerce and errand network for Piwoyi, Abuja — connecting people, Walkers, and local businesses.
 
@@ -31,7 +31,7 @@ See `.env.example` for the full annotated list. Only `DATABASE_URL` and `AUTH_SE
 
 ## Mapping & geocoding architecture
 
-TakenWalk's map runs entirely on **open-source, key-free infrastructure** — no Google Maps, no Google Geocoding, no API keys to provision before the map works.
+Taken A Walk's map runs entirely on **open-source, key-free infrastructure** — no Google Maps, no Google Geocoding, no API keys to provision before the map works.
 
 - **Map rendering**: [MapLibre GL JS](https://maplibre.org/) — a vector map rendered client-side, styled by whatever style URL `NEXT_PUBLIC_MAP_STYLE_URL` points at.
 - **Map data**: [OpenStreetMap](https://www.openstreetmap.org/), served by [OpenFreeMap](https://openfreemap.org/)'s public instance — free, no API key, no request limits, updated weekly from the full OSM planet dataset. Swappable to MapTiler/Stadia/a self-hosted style by changing one env var.

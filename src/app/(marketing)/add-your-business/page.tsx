@@ -47,7 +47,7 @@ export default function AddYourBusinessPage() {
       <div className="mx-auto max-w-xl px-4 py-20 text-center sm:px-6">
         <h1 className="font-display text-3xl font-extrabold text-ink">Thank you!</h1>
         <p className="mt-3 text-ink-soft">
-          We&apos;ve got your business details. The TakenWalk team will visit to verify and add
+          We&apos;ve got your business details. The Taken A Walk team will visit to verify and add
           you to the Piwoyi map.
         </p>
       </div>

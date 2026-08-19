@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { HandDrawnFrame } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { LogoMark } from "@/components/ui/Logo";
 
 export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
   const [email, setEmail] = useState("");
@@ -31,7 +32,10 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
 
   return (
     <HandDrawnFrame className="w-full max-w-sm p-8">
-      <h1 className="font-display text-2xl font-extrabold text-ink">TakenWalk</h1>
+      <h1 className="flex items-center gap-2 font-display text-2xl font-extrabold text-ink">
+        <LogoMark width={26} height={26} />
+        Taken A Walk
+      </h1>
       <p className="mt-1 text-sm text-ink-soft">Piwoyi admin sign in</p>
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">

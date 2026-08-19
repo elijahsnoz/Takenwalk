@@ -3,15 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ADMIN_NAV_ITEMS, isAdminNavItemActive } from "@/lib/adminNav";
+import { LogoMark } from "@/components/ui/Logo";
 
 export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r border-ink/10 bg-cream-soft p-4 sm:flex">
-      <Link href="/" className="mb-6 flex flex-col leading-none">
-        <span className="font-display text-lg font-extrabold text-ink">TAKENWALK</span>
-        <span className="text-[10px] font-semibold uppercase tracking-widest text-ink-soft">Piwoyi, Abuja</span>
+      <Link href="/" className="mb-6 flex items-center gap-2">
+        <LogoMark width={24} height={24} />
+        <span className="flex flex-col leading-none">
+          <span className="font-display text-lg font-extrabold text-ink">TAKEN A WALK</span>
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-ink-soft">Piwoyi, Abuja</span>
+        </span>
       </Link>
 
       <nav className="flex flex-col gap-1">

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { Drawer } from "@/components/ui/Drawer";
+import { LogoMark } from "@/components/ui/Logo";
 import { ADMIN_NAV_ITEMS, isAdminNavItemActive } from "@/lib/adminNav";
 
 export function AdminTopbar({ adminName }: { adminName: string }) {
@@ -22,6 +23,7 @@ export function AdminTopbar({ adminName }: { adminName: string }) {
           >
             ☰
           </button>
+          <LogoMark width={22} height={22} className="sm:hidden" />
           <div>
             <p className="text-sm text-ink-soft">
               Welcome, <span className="font-semibold text-ink">{adminName}</span>

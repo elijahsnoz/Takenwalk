@@ -38,7 +38,7 @@ async function main() {
       cityId: city.id,
       name: "Piwoyi",
       slug: "piwoyi",
-      description: "TakenWalk's first neighborhood — Piwoyi, Abuja.",
+      description: "Taken A Walk's first neighborhood — Piwoyi, Abuja.",
     },
   });
 

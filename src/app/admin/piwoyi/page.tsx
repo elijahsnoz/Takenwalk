@@ -44,7 +44,7 @@ export default async function AdminPiwoyiDashboardPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-display text-3xl font-extrabold text-ink">Piwoyi Dashboard</h1>
-        <p className="text-sm text-ink-soft">Real-time view of the Piwoyi economy on TakenWalk.</p>
+        <p className="text-sm text-ink-soft">Real-time view of the Piwoyi economy on Taken A Walk.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

@@ -87,7 +87,7 @@ async function main() {
   await prisma.communityPost.create({
     data: {
       type: "ANNOUNCEMENT",
-      title: "[DEMO] Welcome to TakenWalk",
+      title: "[DEMO] Welcome to Taken A Walk",
       body: "This is a demo community post for local UI testing only.",
       authorType: "SYSTEM",
       isDemoData: true,

@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: PageProps<"/business/[slug]">
   const { slug } = await params;
   const business = await prisma.business.findUnique({ where: { slug }, select: { name: true, description: true } });
   if (!business) return {};
-  return { title: business.name, description: business.description ?? `${business.name} on TakenWalk — Piwoyi, Abuja.` };
+  return { title: business.name, description: business.description ?? `${business.name} on Taken A Walk — Piwoyi, Abuja.` };
 }
 
 export default async function BusinessProfilePage({ params }: PageProps<"/business/[slug]">) {

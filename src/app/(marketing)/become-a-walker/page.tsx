@@ -4,7 +4,7 @@ import { WalkingFigureIcon } from "@/components/ui/DecorativeIconStrip";
 
 const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
 const whatsappHref = whatsappNumber
-  ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hi TakenWalk, I'd like to become a Walker in Piwoyi.")}`
+  ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hi Taken A Walk, I'd like to become a Walker in Piwoyi.")}`
   : undefined;
 
 export default function BecomeAWalkerPage() {
@@ -13,7 +13,7 @@ export default function BecomeAWalkerPage() {
       <WalkingFigureIcon accent="var(--color-green)" width={48} height={48} />
       <h1 className="mt-4 font-display text-4xl font-extrabold text-ink">Become a Walker</h1>
       <p className="mt-3 text-ink-soft">
-        Walkers are the people who make TakenWalk move — picking up orders from local
+        Walkers are the people who make Taken A Walk move — picking up orders from local
         businesses and delivering them around Piwoyi. No smartphone required to get started:
         we can coordinate jobs by phone call, SMS, or WhatsApp.
       </p>
