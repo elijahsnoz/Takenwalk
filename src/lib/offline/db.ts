@@ -29,6 +29,7 @@ export type PendingBusinessRecord = {
   payload: PendingBusinessPayload;
   photoBlob: Blob | null;
   photoFileName: string | null;
+  additionalPhotoBlobs: Blob[];
   syncStatus: "pending" | "syncing" | "synced" | "error";
   syncError?: string;
   createdAt: number;
@@ -65,7 +66,8 @@ function notifyChange() {
 
 export function createPendingBusinessRecord(
   payload: PendingBusinessPayload,
-  photo: File | null
+  photo: File | null,
+  additionalPhotos: File[] = []
 ): PendingBusinessRecord {
   const now = Date.now();
   return {
@@ -73,6 +75,7 @@ export function createPendingBusinessRecord(
     payload,
     photoBlob: photo,
     photoFileName: photo?.name ?? null,
+    additionalPhotoBlobs: additionalPhotos,
     syncStatus: "pending",
     createdAt: now,
     updatedAt: now,

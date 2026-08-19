@@ -18,7 +18,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
     setLoading(true);
     setError(null);
 
-    const result = await signIn("credentials", { email, password, redirect: false });
+    const result = await signIn("admin", { email, password, redirect: false });
 
     setLoading(false);
     if (!result || result.error) {

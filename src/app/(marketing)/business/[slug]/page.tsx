@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { toPublicBusiness } from "@/lib/dto/business";
@@ -59,6 +60,18 @@ export default async function BusinessProfilePage({ params }: PageProps<"/busine
         // of this script tag (e.g. a name containing "</script>").
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
       />
+      {publicBusiness.photoUrl ? (
+        <HandDrawnFrame className="mb-6 overflow-hidden p-0">
+          <Image
+            src={publicBusiness.photoUrl}
+            alt={publicBusiness.name}
+            width={800}
+            height={450}
+            className="h-56 w-full object-cover sm:h-72"
+          />
+        </HandDrawnFrame>
+      ) : null}
+
       <div className="flex flex-wrap items-center gap-2">
         <Badge tone="neutral">
           {publicBusiness.category.emoji} {publicBusiness.category.label}
@@ -92,6 +105,16 @@ export default async function BusinessProfilePage({ params }: PageProps<"/busine
           </Button>
         ) : null}
       </div>
+
+      {publicBusiness.additionalPhotoUrls.length > 0 ? (
+        <div className="mt-6 flex gap-3 overflow-x-auto">
+          {publicBusiness.additionalPhotoUrls.map((url) => (
+            <HandDrawnFrame key={url} className="shrink-0 overflow-hidden p-0">
+              <Image src={url} alt="" width={160} height={160} className="h-32 w-32 object-cover" />
+            </HandDrawnFrame>
+          ))}
+        </div>
+      ) : null}
 
       {publicBusiness.productsServices ? (
         <HandDrawnFrame className="mt-8 p-6">

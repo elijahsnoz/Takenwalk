@@ -243,8 +243,9 @@ model Business {
   showWhatsappPublicly Boolean @default(false)
   isPubliclyListed     Boolean @default(false)
 
-  photoUrl String?
-  notes    String?
+  photoUrl            String?
+  additionalPhotoUrls String[] @default([])
+  notes               String?
 
   latitude               Float?
   longitude              Float?
@@ -336,6 +337,13 @@ model Customer {
   neighborhoodId String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  // Self-service account fields — null pinHash means this Customer row was
+  // only ever created implicitly by a guest job request and has no login.
+  pinHash           String?
+  dpPhotoUrl        String?
+  failedPinAttempts Int       @default(0)
+  pinLockedUntil    DateTime?
 
   neighborhood Neighborhood? @relation(fields: [neighborhoodId], references: [id])
   jobs         Job[]

@@ -14,7 +14,7 @@ const createPostSchema = z.object({
 
 export async function POST(request: Request) {
   const session = await auth();
-  if (!session?.user) {
+  if (session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

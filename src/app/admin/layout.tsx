@@ -6,7 +6,7 @@ import { AdminTopbar } from "@/components/layout/AdminTopbar";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const session = await auth();
-  if (!session?.user) {
+  if (session?.user?.role !== "ADMIN") {
     redirect("/login");
   }
 

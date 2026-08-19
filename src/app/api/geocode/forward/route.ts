@@ -15,7 +15,7 @@ const forwardGeocodeQuerySchema = z.object({ address: z.string().min(3).max(300)
  */
 export async function GET(request: Request) {
   const session = await auth();
-  if (!session?.user) {
+  if (session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

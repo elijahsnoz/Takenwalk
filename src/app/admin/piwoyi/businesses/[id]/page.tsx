@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
@@ -65,6 +66,20 @@ export default async function AdminBusinessDetailPage({ params }: PageProps<"/ad
           <Card className="p-5 sm:col-span-2">
             <h2 className="text-sm font-bold uppercase tracking-wide text-ink-soft">Internal Notes</h2>
             <p className="mt-2 whitespace-pre-line text-sm text-ink">{business.notes}</p>
+          </Card>
+        ) : null}
+
+        {business.photoUrl || business.additionalPhotoUrls.length > 0 ? (
+          <Card className="p-5 sm:col-span-2">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-ink-soft">Photos</h2>
+            <div className="mt-2 flex flex-wrap gap-3">
+              {business.photoUrl ? (
+                <Image src={business.photoUrl} alt="" width={128} height={128} className="h-32 w-32 rounded-lg object-cover" />
+              ) : null}
+              {business.additionalPhotoUrls.map((url) => (
+                <Image key={url} src={url} alt="" width={128} height={128} className="h-32 w-32 rounded-lg object-cover" />
+              ))}
+            </div>
           </Card>
         ) : null}
       </div>

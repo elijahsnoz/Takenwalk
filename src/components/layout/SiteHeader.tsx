@@ -1,11 +1,15 @@
 import Link from "next/link";
+import { auth } from "@/lib/auth";
 
 const NAV_LINKS = [
   { href: "/map", label: "Map" },
   { href: "/community", label: "Community" },
 ];
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const session = await auth();
+  const isCustomer = session?.user?.role === "CUSTOMER";
+
   return (
     <header className="border-b border-ink/10 bg-cream-soft">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
@@ -28,6 +32,12 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
+          <Link
+            href={isCustomer ? "/account" : "/account/login"}
+            className="text-sm font-medium text-ink-soft hover:text-ink"
+          >
+            {isCustomer ? "My Account" : "Sign In"}
+          </Link>
         </nav>
       </div>
     </header>

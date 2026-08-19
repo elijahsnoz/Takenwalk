@@ -54,6 +54,7 @@ export function BusinessFormDrawer({
   const [address, setAddress] = useState<string | null>(null);
   const [addressLoading, setAddressLoading] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
+  const [additionalPhotos, setAdditionalPhotos] = useState<File[]>([]);
   const [closedDays, setClosedDays] = useState<Set<number>>(new Set());
   const [saved, setSaved] = useState(false);
 
@@ -123,7 +124,7 @@ export function BusinessFormDrawer({
       locationSource: location.source,
     };
 
-    const record = createPendingBusinessRecord(payload, photo);
+    const record = createPendingBusinessRecord(payload, photo, additionalPhotos);
 
     await savePendingBusiness(record);
     setSaved(true);
@@ -141,6 +142,7 @@ export function BusinessFormDrawer({
     setLocation({ status: "idle" });
     setAddress(null);
     setPhoto(null);
+    setAdditionalPhotos([]);
     setClosedDays(new Set());
   }
 
@@ -304,6 +306,15 @@ export function BusinessFormDrawer({
             accept="image/*"
             capture="environment"
             onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+            className="text-sm text-ink-soft"
+          />
+          <p className="text-xs text-ink-soft">More photos (optional) — products, interior, signage</p>
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            multiple
+            onChange={(e) => setAdditionalPhotos(Array.from(e.target.files ?? []))}
             className="text-sm text-ink-soft"
           />
         </section>

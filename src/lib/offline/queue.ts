@@ -13,6 +13,9 @@ export async function syncPendingBusiness(record: PendingBusinessRecord): Promis
   if (record.photoBlob) {
     formData.set("photo", record.photoBlob, record.photoFileName ?? "photo.jpg");
   }
+  record.additionalPhotoBlobs.forEach((blob, i) => {
+    formData.append("additionalPhotos", blob, `photo-${i}.jpg`);
+  });
 
   try {
     const res = await fetch("/api/businesses/sync", { method: "POST", body: formData });

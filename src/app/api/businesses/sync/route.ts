@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(request: Request) {
   const session = await auth();
-  if (!session?.user) {
+  if (session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -57,6 +57,11 @@ export async function POST(request: Request) {
     photoUrl = uploaded.url;
   }
 
+  const additionalPhotoFiles = formData.getAll("additionalPhotos").filter((f): f is File => f instanceof File && f.size > 0);
+  const additionalPhotoUrls = await Promise.all(
+    additionalPhotoFiles.map(async (file) => (await uploadPhoto(file, "businesses")).url)
+  );
+
   const baseSlug = slugify(data.name) || "business";
   let slug = baseSlug;
   for (let i = 2; await prisma.business.findUnique({ where: { slug } }); i++) {
@@ -87,6 +92,7 @@ export async function POST(request: Request) {
       showWhatsappPublicly: data.showWhatsappPublicly,
       notes: data.notes,
       photoUrl,
+      additionalPhotoUrls,
       latitude: data.latitude,
       longitude: data.longitude,
       locationAccuracyMeters: data.accuracyMeters,

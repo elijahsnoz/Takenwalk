@@ -27,6 +27,7 @@ export function toPublicBusiness(business: BusinessWithRelations) {
     productsServices: business.productsServices,
     topRequestedProducts: business.topRequestedProducts,
     photoUrl: business.photoUrl,
+    additionalPhotoUrls: business.additionalPhotoUrls,
     latitude: business.latitude,
     longitude: business.longitude,
     isOpenNow: isOpenNow(business.openingHours),

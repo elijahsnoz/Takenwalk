@@ -12,7 +12,7 @@ const updateBusinessSchema = z.object({
 
 export async function PATCH(request: Request, { params }: RouteContext<"/api/businesses/[id]">) {
   const session = await auth();
-  if (!session?.user) {
+  if (session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
